@@ -1,0 +1,6 @@
+component Hello{
+    int x : 200 + this.y + this.x
+    int y: {
+        return "200"
+    }
+}

@@ -1,0 +1,3 @@
+var a = Something{
+    int x : 200 + this.y + this.x
+}

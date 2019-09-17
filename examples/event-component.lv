@@ -1,0 +1,4 @@
+component Hello{
+    event event1()
+    event event2(int x, int y)
+}

@@ -1,0 +1,4 @@
+import base as bs
+import view.opengl as vogl
+
+component X{}

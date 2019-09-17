@@ -1,0 +1,37 @@
+{
+  "name": "tree-sitter-elements",
+  "version": "0.15.1",
+  "description": "Live Elements grammar for node-tree-sitter",
+  "main": "index.js",
+  "keywords": [
+    "parser",
+    "lexer"
+  ],
+  "author": "Dinu SV",
+  "license": "MIT",
+  "dependencies": {
+    "nan": "^2.12.1"
+  },
+  "devDependencies": {
+    "acorn": "^2.6.4",
+    "babylon": "^6.3.26",
+    "esprima": "^2.7.1",
+    "tree-sitter-cli": "^0.15.8",
+    "tree-sitter-highlight-schema": "0.1.1"
+  },
+  "scripts": {
+    "build": "tree-sitter generate && node-gyp build",
+    "test": "tree-sitter test && script/parse-examples",
+    "test-windows": "tree-sitter test"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.js",
+      "file-types": [
+        "js"
+      ],
+      "highlights": "src/highlights.json",
+      "injection-regex": "^(js|javascript)$"
+    }
+  ]
+}

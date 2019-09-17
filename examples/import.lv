@@ -1,0 +1,5 @@
+import base
+import view
+import view.opengl
+
+component X{}

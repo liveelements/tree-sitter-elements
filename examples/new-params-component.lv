@@ -1,0 +1,5 @@
+var a = Params{
+    constructor(p, t, s){
+        console.log(p + t + s)
+    }
+}(p, t, y)
