@@ -13,7 +13,7 @@
     "nan": "^2.12.1"
   },
   "devDependencies": {
-    "acorn": "^2.6.4",
+    "acorn": "^7.1.1",
     "babylon": "^6.3.26",
     "esprima": "^2.7.1",
     "tree-sitter-cli": "^0.15.8",
