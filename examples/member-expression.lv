@@ -1,0 +1,9 @@
+
+component default < Element{
+    string url: {
+        return import.meta.url
+    }
+    string module: {
+        return import.meta.module
+    }
+}

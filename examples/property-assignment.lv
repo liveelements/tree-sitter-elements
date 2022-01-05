@@ -1,0 +1,10 @@
+import typing
+
+A{
+    href:'https://livekeys.io'
+    x:'https://livekeys.io' + this.b
+    y: {
+        return 200
+    }
+}
+

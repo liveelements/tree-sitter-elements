@@ -1,0 +1,4 @@
+component default < Container{
+    component ElemProp : component T{
+    }
+}

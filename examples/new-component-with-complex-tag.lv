@@ -1,0 +1,12 @@
+component X{
+
+    T`Hello {$myvar}`
+
+    T```
+        function(){
+
+        }
+    ```
+
+
+}

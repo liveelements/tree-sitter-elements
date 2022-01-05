@@ -3,4 +3,5 @@ component Hello{
     int y: {
         return "200"
     }
+    int z
 }

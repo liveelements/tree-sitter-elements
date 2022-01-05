@@ -1,0 +1,6 @@
+import {asd} from 'asd'
+import {ab, ac} from 'abcd'
+
+component A < Element{
+    
+}

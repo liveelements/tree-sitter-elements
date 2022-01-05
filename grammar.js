@@ -75,6 +75,7 @@ module.exports = grammar({
     [$.assignment_pattern, $.assignment_expression],
     [$.computed_property_name, $.array],
     [$._for_header, $._expression],
+    [$._expression, $.new_tagged_component_expression],
   ],
 
   word: $ => $.identifier,
@@ -167,6 +168,15 @@ module.exports = grammar({
       $.identifier
     ),
 
+    js_import_statement: $ => prec(1, seq(
+      'import',
+      '{',
+      commaSep($.identifier),
+      '}',
+      'from',
+      field('source', $.string)
+    )),
+
     // import_clause: $ => choice(
     //   $.namespace_import,
     //   $.named_imports,
@@ -204,6 +214,7 @@ module.exports = grammar({
     _statement: $ => choice(
       // $.export_statement,  // Replaced
       $.import_statement,
+      $.js_import_statement,
       $.debugger_statement,
       $.expression_statement,
       $._declaration,
@@ -431,6 +442,9 @@ module.exports = grammar({
       $.update_expression,
       $.call_expression,
       $.yield_expression,
+
+      $.new_component_expression,
+      // $.component_declaration
     ),
 
     yield_expression: $ => prec.right(seq(
@@ -676,6 +690,7 @@ module.exports = grammar({
       $.arrow_function,
       $.generator_function,
       $.class,
+      $.component,
       $.parenthesized_expression,
       $.subscript_expression,
       $.member_expression,
@@ -872,6 +887,26 @@ module.exports = grammar({
       '`'
     ),
 
+    tagged_type_string: $ => seq(
+      '`',
+      repeat(choice(
+        $._template_chars,
+        $.escape_sequence,
+        $.template_substitution
+      )),
+      '`'
+    ),
+
+    tripple_tagged_type_string: $ => seq(
+      '```',
+      repeat(choice(
+        $._template_chars,
+        $.escape_sequence,
+        $.template_substitution
+      )),
+      '```'
+    ),
+
     template_substitution: $ => seq(
       '${',
       $._expressions,
@@ -1038,12 +1073,29 @@ module.exports = grammar({
 
     method_definition: $ => seq(
       repeat(field('decorator', $.decorator)),
-      optional('static'),
       optional('async'),
+      optional('static'),
       optional(choice('get', 'set', '*')),
       field('name', $._property_name),
       field('parameters', $.formal_parameters),
       field('body', $.statement_block)
+    ),
+
+    constructor_definition: $ => seq(
+      'constructor',
+      field('parameters', $.formal_parameters),
+      field('body', $.statement_block)
+    ),
+
+    // component is part of expresison, and component_declaration is part of statement (just like class)
+
+    component: $ => seq(
+      repeat(field('decorator', $.decorator)),
+      'component',
+      field('name', $.identifier),
+      optional($.component_heritage),
+      optional($.component_identifier),
+      field('body', $.component_body)
     ),
 
     component_declaration: $ => prec(PREC.DECLARATION, seq(
@@ -1056,27 +1108,66 @@ module.exports = grammar({
       optional($._automatic_semicolon)
     )),
 
-    component_heritage: $ => seq('<', $.identifier),
+    component_heritage: $ => seq(
+      '<', 
+      $.identifier,
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      )))
+    ),
     
     component_identifier: $ => seq('#', $.identifier),
+    component_instance: $ => seq('instance', $.identifier),
     
     new_component_expression: $ => prec.right(PREC.NEW, seq(
+      optional($.component_instance),
       field('name', $.identifier),
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      ))),
+      optional($.component_identifier),
       $.component_body,
       optional(field('arguments', optional($.arguments)))
     )),
+
+    new_tagged_component_expression: $ => seq(
+      field('name', $.identifier),
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      ))),
+      optional($.component_identifier),
+      $.tagged_type_string
+    ),
+
+    new_tripple_tagged_component_expression: $=> seq(
+      field('name', $.identifier),
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      ))),
+      optional($.component_identifier),
+      $.tripple_tagged_type_string
+    ),
     
     component_body: $ => seq(
       '{',
       repeat(choice(
+        seq(field('member', $.constructor_definition), optional(';')),
         seq(field('member', $.event_declaration), optional(';')),
         seq(field('member', $.listener_declaration), optional(';')),
-        seq(field('member', $.typed_function_declaration), optional(';')),
+        seq(field('member', $.typed_method_declaration), optional(';')),
         seq(field('member', $.property_declaration), optional(';')),
+        seq(field('member', $.static_property_declaration), optional(';')),
+        seq(field('member', $.identifier_property_assignment), optional(';')),
         seq(field('member', $.property_assignment), optional(';')),
-        seq(field('member', $.new_component_expression), optional(';')),
         seq(field('member', $.method_definition), optional(';')),
-        seq(field('member', $.public_field_definition), $._semicolon)
+        seq(field('member', $.new_component_expression), optional(';')),
+        seq(field('member', $.new_tagged_component_expression), optional(';')),
+        seq(field('member', $.new_tripple_tagged_component_expression), optional(';')),
+        // seq(field('member', $.public_field_definition), $._semicolon)
       )),
       '}'
     ),
@@ -1084,13 +1175,13 @@ module.exports = grammar({
     formal_type_parameters: $ => seq(
       '(',
       optional(seq(
-        commaSep1($._formal_type_parameter),
+        commaSep1($.formal_type_parameter),
         optional(',')
       )),
       ')'
     ),
 
-    _formal_type_parameter: $ => seq(
+    formal_type_parameter: $ => seq(
       field('parameter_type', $.identifier),
       choice(
         $.identifier,
@@ -1101,17 +1192,57 @@ module.exports = grammar({
       )
     ),
 
+    property_declaration_initializer: $ => seq(
+      ':',
+      choice(
+        $.property_assignment_expression,
+        $.statement_block
+      )
+    ),
+
+    property_declaration_name: $ => $.identifier,
+
     property_declaration: $ => seq(
       field('type', $.identifier),
-      field('name', $._property_name),
-      ':',
-      $._statement
+      field('name', $.property_declaration_name),
+      optional($.property_declaration_initializer)
     ),
+
+    property_expression_initializer: $ => seq(
+      '=',
+      field('value', $._expression)
+    ),
+
+    static_property_declaration: $ => seq(
+      'static',
+      field('type', $.identifier),
+      field('name', $.property_declaration_name),
+      optional($.property_expression_initializer)
+    ),
+
+    identifier_property_assignment: $ => seq(
+      field('name', 'id'),
+      ':',
+      $.identifier
+    ),
+
+    property_assignment_name: $ => seq(
+      $.identifier,
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      )))
+    ),
+
+    property_assignment_expression: $ => $._expression,
     
     property_assignment: $ => seq(
-      field('name', $._property_name),
+      $.property_assignment_name,
       ':',
-      $._statement
+      choice(
+        $.property_assignment_expression,
+        $.statement_block
+      )
     ),
 
     event_declaration: $ => seq(
@@ -1120,10 +1251,15 @@ module.exports = grammar({
       field('parameters', $.formal_type_parameters)
     ),
 
-    typed_function_declaration: $ => seq(
+    typed_function_return_type: $ => $.identifier,
+
+    typed_method_declaration: $ => seq(
+      optional('static'),
+      optional('async'),
       'fn',
-      field('name', $._property_name),
+      field('name', $.identifier),
       field('parameters', $.formal_type_parameters),
+      optional(field('return', $.typed_function_return_type)),
       field('body', $.statement_block)
     ),
 
