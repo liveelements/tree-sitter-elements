@@ -1,0 +1,7 @@
+import .plugin1
+import .
+import package.plugin1
+import .plugin2
+import package.plugin2
+import .
+import .plugin3

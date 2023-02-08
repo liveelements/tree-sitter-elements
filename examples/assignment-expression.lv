@@ -1,0 +1,6 @@
+
+instance app Application{
+    x: {
+        this.y = 100
+    }
+}

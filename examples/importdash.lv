@@ -1,0 +1,6 @@
+import package-with-dash
+import package-with.plugin-dash
+
+component X{
+    
+}

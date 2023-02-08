@@ -8,8 +8,7 @@
       ],
       "sources": [
         "src/parser.c",
-        "src/scanner.c",
-        "src/binding.cc"
+        "src/scanner.c"
       ],
       "cflags_c": [
         "-std=c99",
