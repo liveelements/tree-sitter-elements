@@ -68,6 +68,10 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
     [
       $.new_component_expression,
       $.primary_expression
+    ],
+    [ 
+      $.primary_expression,
+      $.ambient_declaration
     ]
   ]),
 
@@ -88,10 +92,24 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
     [$._property_name, $.static_property_declaration],
     [$.component],
     [$.new_component_expression],
+    [$.import_path_segment],
+    [$.import_path],
     [
       $.new_component_expression,
       $._type_query_member_expression,
       $.primary_expression
+    ],
+    [
+      $.method_signature,
+      $.existential_type
+    ],
+    [
+      $.object_type,
+      $.component_body
+    ],
+    [
+      $.nested_identifier,
+      $.component_short_heritage
     ]
   ]),
 
@@ -162,15 +180,35 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
   
     import_statement: $ => prec(1, seq(
       'import',
-      optional('.'),
       $.import_path,
       optional($.import_as)
     )),
 
-    import_path: $ => seq(
-      $.identifier, 
-      repeat(seq(
-        '.',
+    import_path: $ => choice(
+      seq(
+        field('relative', '.'),
+        optional(seq(
+          $.import_path_segment,
+          repeat(seq(
+            '.',
+            $.import_path_segment
+          ))
+        ))
+      ),
+      seq(
+        $.import_path_segment,
+        repeat(seq(
+          '.',
+          $.import_path_segment
+        ))
+      )
+    ),
+
+    import_path_segment: $ => seq(
+      $.identifier,
+      repeat(choice(
+        '-',
+        $.number,
         $.identifier
       ))
     ),
@@ -179,6 +217,7 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       'as',
       $.identifier
     ),
+
     js_import_statement: $ => prec(1, seq(
       'import',
       choice(
@@ -200,22 +239,41 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
 
     component: $ => seq(
       repeat(field('decorator', $.decorator)),
-      'component',
-      optional(field('name', $.identifier)),
-      optional($.component_heritage),
-      optional($.component_identifier),
+      choice(
+        seq(
+          'component',
+          optional(field('name', $.identifier)),
+          optional(field('heritage', $.component_heritage))
+        ),
+        field('heritage', $.component_short_heritage)
+      ),
+      optional(field('id', $.component_identifier)),
       field('body', $.component_body)
     ),
 
     component_declaration: $ => prec.left('declaration', seq(
       repeat(field('decorator', $.decorator)),
-      'component',
-      field('name', $.identifier),
-      optional($.component_heritage),
-      optional($.component_identifier),
+      choice(
+        seq(
+          'component',
+          optional(field('name', $.identifier)),
+          optional(field('heritage', $.component_heritage))
+        ),
+        field('heritage', $.component_short_heritage)
+      ),
+      optional(field('id', $.component_identifier)),
       field('body', $.component_body),
       optional($._automatic_semicolon)
     )),
+
+    component_short_heritage: $ => seq(
+      '&',
+      $.identifier,
+      optional(repeat(seq(
+        '.',
+        $.identifier
+      )))
+    ),
 
     component_heritage: $ => seq(
       '<', 

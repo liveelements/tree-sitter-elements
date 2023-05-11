@@ -1,0 +1,16 @@
+component Test{
+    let x = component{}
+    let y = component < X{}
+    let z = &X{}
+    let w = &X#x{
+        fn completed(){
+            let a = 5
+            let b = &X{}
+        }
+    }
+    let t = &X{
+        fn completed(){
+            let a = &X.Y{}
+        }
+    }
+}

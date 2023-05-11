@@ -1,4 +1,4 @@
 component Listener{
     int a : 20
-    on aChanged : () => { console.log(this.a) }
+    on aChanged : () => console.log(this.a)
 }

@@ -1,5 +1,6 @@
 import package-with-dash
 import package-with.plugin-dash
+import dash-package-1
 
 component X{
     

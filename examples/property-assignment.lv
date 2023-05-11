@@ -1,10 +1,10 @@
-import typing
+import .
 
-A{
-    href:'https://livekeys.io'
-    x:'https://livekeys.io' + this.b
-    y: {
-        return 200
+instance default Element{
+    string a : {
+        return (new A()).toString()
+    }
+    string b : {
+        return (new B()).toString()
     }
 }
-
