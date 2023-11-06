@@ -8,3 +8,7 @@ package-lock.json
 parser.exp
 *.lib
 *.obj
+
+# Generated files
+bindings/
+Cargo.toml

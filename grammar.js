@@ -494,12 +494,15 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
         $.identifier
       )),
       choice(
-        field('assignment', '='),
-        field('binding_assignemnt', ':')
-      ),
-      choice(
-        $.property_assignment_expression,
-        $.statement_block
+        field('assignment', seq(
+          '=',  $.property_assignment_expression
+        )),
+        field('binding_assignemnt', seq(
+          ':', choice(
+            $.property_assignment_expression,
+            $.statement_block
+          )
+        ))
       )
     ),
 
