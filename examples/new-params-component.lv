@@ -1,5 +1,7 @@
-var a = Params{
-    constructor(p, t, s){
-        console.log(p + t + s)
+
+component X{
+    Params.(p, t, y){
+        x: 10
     }
-}(p, t, y)
+}
+

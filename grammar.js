@@ -297,8 +297,19 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
         $.identifier
       )),
       optional($.component_identifier),
-      $.new_component_body,
-      optional(field('arguments', optional($.arguments)))
+      choice(
+        seq(
+          optional(seq(
+            '.',
+            field('arguments', $.arguments),
+          )),
+          $.new_component_body
+        ),
+        seq(
+          $.new_component_body,
+          optional(field('arguments', optional($.arguments)))
+        )
+      )
     ),
 
     new_tagged_component_expression: $ => seq(
