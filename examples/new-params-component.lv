@@ -1,7 +1,6 @@
-
-component X{
-    Params.(p, t, y){
-        x: 10
-    }
+component NestingTest < Container{
+    int x: A.(){}
+    int y: A{}
+    int z: (getA()).(){}
+    int w: ((getA()).(){}).toString()
 }
-

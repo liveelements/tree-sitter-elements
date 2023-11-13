@@ -12,7 +12,8 @@
  * Date: 2014-05-01T17:11Z
  */
 
-(function( global, factory ) {
+component X{
+	var x = (function( global, factory ) {
 
 	if ( typeof module === "object" && typeof module.exports === "object" ) {
 		// For CommonJS and CommonJS-like environments where a proper window is present,
@@ -9188,3 +9189,5 @@ if ( typeof noGlobal === strundefined ) {
 return jQuery;
 
 }));
+
+}

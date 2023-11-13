@@ -10,26 +10,20 @@ function commaSep (rule) {
 module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
   name: 'elements',
   precedences: ($, previous) => previous.concat([
-    [
+    ['member', 'call', 'new_component_expression', $.expression],
+    [ 
+      $.component_instance_statement,
       $.subscript_expression,
-      $.property_assignment_expression,
-      $.property_expression_initializer,
-      $.property_assignment,
-      $.listener_declaration
-    ],
-    [
       $.binary_expression,
+      $.new_component_expression,
       $.call_expression,
-      $.property_assignment_expression,
-      $.property_expression_initializer,
-      $.listener_declaration
-    ],
-    [
-      $.binary_expression, 
+      $.member_expression,
       $.property_assignment_expression,
       $.property_expression_initializer,
       $.property_assignment,
-      $.listener_declaration
+      $.primary_expression,
+      $.listener_declaration,
+      $.ambient_declaration
     ],
     [
       $.method_definition,
@@ -58,20 +52,9 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       $.empty_statement
     ],
     [
+      $.index_signature,
       $.primary_expression,
       $.method_signature
-    ],
-    [
-      $.index_signature,
-      $.primary_expression
-    ],
-    [
-      $.new_component_expression,
-      $.primary_expression
-    ],
-    [ 
-      $.primary_expression,
-      $.ambient_declaration
     ]
   ]),
 
@@ -83,6 +66,7 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       $.primary_expression,
     ],
     [$.primary_expression,$.nested_identifier],
+    [$.primary_expression,$.static_property_declaration],
     [$.primary_expression, $.new_tagged_component_expression],
     [
       $._type_query_member_expression,
@@ -110,6 +94,11 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
     [
       $.nested_identifier,
       $.component_short_heritage
+    ],
+    [
+      $.primary_expression,
+      $.function,
+      $.generator_function
     ]
   ]),
 
@@ -129,7 +118,8 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
 
     primary_expression: ($, previous) => {
       const choices = [
-        $.component
+        $.component,
+        $.new_component_expression
       ]
       choices.push(...previous.members);
       return choice(...choices)
@@ -137,7 +127,6 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
 
     expression: ($, previous) => {
       const choices = [
-        $.new_component_expression,
         $.new_tagged_component_expression,
         $.new_tripple_tagged_component_expression
       ]
@@ -146,6 +135,14 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       ));
       return choice(...choices)
     },
+
+    member_expression: $ => prec('member', seq(
+      field('object', choice($.expression, $.primary_expression, $.new_component_expression)),
+      choice('.', field('optional_chain', $.optional_chain)),
+      field('property', choice(
+        $.private_property_identifier,
+        alias($.identifier, $.property_identifier)))
+    )),
 
     call_expression: $ => choice(
       prec('call', seq(
@@ -290,28 +287,38 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       $.component_instance,
       $.new_component_expression
     ),
-    
-    new_component_expression: $ => seq(
-      field('name', choice(
+
+    nested_new_component_expression: $ => seq(
+      field('constructor', choice(
         $.nested_identifier,
         $.identifier
       )),
+      optional(seq(
+        '.',
+        field('arguments', optional(prec.dynamic(1, $.arguments))),
+      )),
       optional($.component_identifier),
-      choice(
+      $.new_component_body
+    ),
+
+    new_component_expression: $ => prec.right('new_component_expression', choice(
         seq(
-          optional(seq(
-            '.',
-            field('arguments', $.arguments),
-          )),
+          field('constructor', choice($.primary_expression, $.new_component_expression)),
+          '.',
+          field('arguments', optional(prec.dynamic(1, $.arguments))),
+          optional($.component_identifier),
           $.new_component_body
         ),
         seq(
-          $.new_component_body,
-          optional(field('arguments', optional($.arguments)))
+          field('constructor', choice(
+            $.nested_identifier,
+            $.identifier
+          )),
+          optional($.component_identifier),
+          $.new_component_body
         )
-      )
-    ),
-
+    )),
+    
     new_tagged_component_expression: $ => seq(
       field('name', choice(
         $.nested_identifier,
@@ -342,7 +349,7 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
         seq(field('member', $.static_property_declaration), optional(';')),
         seq(field('member', $.identifier_property_assignment), optional(';')),
         seq(field('member', $.property_assignment), optional(';')),
-        seq(field('member', $.new_component_expression), optional(';')),
+        seq(field('member', $.nested_new_component_expression), optional(';')),
         seq(field('member', $.new_tagged_component_expression), optional(';')),
         seq(field('member', $.new_tripple_tagged_component_expression), optional(';')),
       )),
@@ -358,7 +365,7 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
         seq(field('member', $.property_declaration), optional(';')),
         seq(field('member', $.identifier_property_assignment), optional(';')),
         seq(field('member', $.property_assignment), optional(';')),
-        seq(field('member', $.new_component_expression), optional(';')),
+        seq(field('member', $.nested_new_component_expression), optional(';')),
         seq(field('member', $.new_tagged_component_expression), optional(';')),
         seq(field('member', $.new_tripple_tagged_component_expression), optional(';')),
       )),

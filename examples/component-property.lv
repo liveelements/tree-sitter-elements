@@ -1,0 +1,3 @@
+instance default TestCase{
+    ls: A.(){}.X.(){}
+}
