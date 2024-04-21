@@ -1,0 +1,6 @@
+component X < Y{
+    constructor(x:any, y:any){
+        super(x, y)
+        this{x = (10 + 20 / 3) }
+    }
+}

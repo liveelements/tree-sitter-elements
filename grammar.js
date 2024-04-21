@@ -16,6 +16,7 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       $.subscript_expression,
       $.binary_expression,
       $.new_component_expression,
+      $.constructor_initializer,
       $.call_expression,
       $.member_expression,
       $.property_assignment_expression,
@@ -119,7 +120,8 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
     primary_expression: ($, previous) => {
       const choices = [
         $.component,
-        $.new_component_expression
+        $.new_component_expression,
+        $.constructor_initializer
       ]
       choices.push(...previous.members);
       return choice(...choices)
@@ -335,6 +337,21 @@ module.exports = grammar(require('tree-sitter-typescript/typescript/grammar'), {
       )),
       optional($.component_identifier),
       $.tripple_tagged_type_string
+    ),
+
+    constructor_initializer_assignment: $ => seq(
+      field('name', $.identifier),
+      '=',
+      field('value', $.property_assignment_expression)
+    ),
+    
+    constructor_initializer: $ => seq(
+      $.this,
+      '{',
+      repeat(
+        seq(field('property_assignment', $.constructor_initializer_assignment), optional(';'))
+      ),
+      '}'
     ),
     
     component_body: $ => seq(
